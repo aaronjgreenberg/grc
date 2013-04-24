@@ -2,8 +2,8 @@ require 'formula'
 
 class Agrc < Formula
   homepage ''
-  url 'https://github.com/aaronjgreenberg/grc'
-  sha1 '1cce58a533678b8edac74f6a7264897ddecd4561'
+  url 'https://github.com/aaronjgreenberg/grc/archive/master.zip'
+  sha1 '8a0cd6ff129dbdb01e2d47e051493dfea6781745'
   version '1.0'
 
   def install
