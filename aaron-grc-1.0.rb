@@ -4,7 +4,6 @@ class AaronGrc < Formula
   homepage ''
   url 'https://github.com/aaronjgreenberg/grc'
   sha1 'cb45ab8cb20aaf80a1f64b2a155837b8f489b76a'
-  version '1.0'
 
   def install
     inreplace ['bin/grc', 'share/man/man1/grc.1'], '/etc', etc
