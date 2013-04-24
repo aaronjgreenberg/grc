@@ -66,7 +66,7 @@ home = []
 conffile = None
 if os.environ.has_key('HOME'):
     home = [os.environ['HOME']+"/.grc/"]
-conffilepath = [""] + home + ["/usr/local/share/grc/", "/usr/share/grc/"]
+conffilepath = [""] + home + ["/usr/local/Cellar/grc/1.4/share/grc/", "/usr/share/grc/"]
 conffile_arg = sys.argv[1] # tentative conffile
 for i in conffilepath:
     if os.path.isfile(i+conffile_arg):
