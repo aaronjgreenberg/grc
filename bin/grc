@@ -28,6 +28,86 @@ def keybint(signum, frame):
     except OSError: # if the subprocess already died
         pass
 
+def create( command ):
+    HOME = os.environ['HOME']
+    ZSHOME = os.environ['ZSHOME']
+
+    conf_file = HOME + "/.grc/conf.%s" % ( command )
+
+    if os.path.isfile( conf_file ):
+        sys.stdout.write( "It would seem that a GRC configuration already exists for '%s'...\n" % command )
+        sys.exit()
+
+    # Create the configuration file
+    conf_file = open( conf_file, 'a' )
+    conf_file.write( "# GRC CONFIGURATION FOR %s\n" % ( command.upper() ) )
+    conf_file.write( "regexp=\n" )
+    conf_file.write( "colours=\n" )
+    conf_file.close()
+
+    # Edit the grc.conf file
+    grc_conf = HOME + "/.grc/grc.conf"
+    grc_conf = open( grc_conf, 'a' )
+    grc_conf.write( "\n# %s command\n" % command )
+    grc_conf.write( r"(^|[/\w\.]+/)%s\s?" % command )
+    grc_conf.write( "\nconf.%s\n" % command )
+    grc_conf.close()
+
+    # Edit the grc.zsh file
+    grc_zsh = ZSHOME + "/system/grc.zsh"
+    grc_zsh = open( grc_zsh, 'r+w' )
+    alias = "    alias %s='colourify %s'\n" % ( command, command )
+    lines = grc_zsh.readlines()
+    # Hacky way to clear the file so we don't get repeats
+    grc_zsh.seek(0)
+    grc_zsh.truncate()
+    lines.insert( -1, alias )
+    grc_zsh.writelines( lines )
+    grc_zsh.close()
+
+    sys.stdout.write( "Successfully created templates for %s!\n" % command )
+    sys.exit()
+
+def delete( command ):
+    HOME = os.environ['HOME']
+    ZSHOME = os.environ['ZSHOME']
+
+    conf_file = HOME + "/.grc/conf.%s" % ( command )
+    if not os.path.isfile( conf_file ):
+        sys.stdout.write( "It would appear that '%s' is not yet configured by GRC...\n" % command )
+        sys.exit()
+
+    # Delete the GRC configuration file
+    os.remove( conf_file )
+
+    # Remove it from the grc.conf file
+    grc_conf = HOME + "/.grc/grc.conf"
+    grc_conf = open( grc_conf, 'r+w' )
+    lines = grc_conf.readlines()
+    grc_conf.seek(0)
+    grc_conf.truncate()
+    lines = [lines[i:i+3] for i in range( 0, len( lines ), 4 )]
+    removable = "%s\n" % os.path.basename( conf_file )
+    lines.remove( filter( lambda x: removable in x, lines )[0] )
+    lines = [group for sublist in lines for group in sublist + ['\n']]
+    # Don't need the last newline
+    lines = lines[0:-1]
+    grc_conf.writelines( lines )
+    grc_conf.close()
+
+    # Remove it from the grc.zsh file
+    grc_zsh = ZSHOME + "/system/grc.zsh"
+    grc_zsh = open( grc_zsh, 'r+w' )
+    removable = "    alias %s='colourify %s'\n" % ( command, command )
+    lines = grc_zsh.readlines()
+    grc_zsh.seek(0)
+    grc_zsh.truncate()
+    lines.remove( removable )
+    grc_zsh.writelines( lines )
+    grc_zsh.close()
+
+    sys.stdout.write( "Successfully deleted %s!\n" % command )
+    sys.exit()
 
 try:
     optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
@@ -36,6 +116,12 @@ except:
 
 if not args:
     help()
+
+command = args[0].lower()
+if command == "create":
+    create(args[1])
+elif command == "delete":
+    delete(args[1])
 
 stdoutf = 0
 stderrf = 0
@@ -75,7 +161,7 @@ if cfile == "":
     home = []
     if os.environ.has_key('HOME'):
         home = [os.environ['HOME']+"/.grc/grc.conf"]
-    conffilenames = home + ["/etc/grc.conf"]
+    conffilenames = home + ["/usr/local/etc/grc.conf"]
     for i in conffilenames:
         if os.path.isfile(i):
             conffile = i
