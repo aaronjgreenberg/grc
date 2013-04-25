@@ -109,19 +109,6 @@ def delete( command ):
     sys.stdout.write( "Successfully deleted %s!\n" % command )
     sys.exit()
 
-if sys.argv[1].lower() == "create":
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
-        create( args[1] )
-    except:
-        help()
-elif sys.argv[1].lower() == "delete":
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
-        delete( args[1] )
-    except:
-        help()
-
 try:
     optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
 except:
@@ -129,6 +116,12 @@ except:
 
 if not args:
     help()
+
+command = args[0].lower()
+if command == "create":
+    create( args[1] )
+elif command == "delete":
+    delete( args[1] )
 
 stdoutf = 0
 stderrf = 0
