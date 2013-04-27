@@ -144,12 +144,6 @@ def run():
     if not args:
         help()
 
-    command = args[0].lower()
-    if command == "create":
-        create( args[1] )
-    elif command == "delete":
-        delete( args[1] )
-
     stdoutf = 0
     stderrf = 0
 
