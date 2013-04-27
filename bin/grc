@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, re, string, sys, getopt, signal
+import os, re, string, sys, argparse, signal
 pidp = None
 
 def version():
@@ -29,21 +29,13 @@ def keybint(signum, frame):
     except OSError: # if the subprocess already died
         pass
 
-def create():
+def create( args ):
 
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
-    except:
-        help()
-
-    if not args:
-        help()
-
-    command = args[1].lower()
+    command = args.command.lower()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
-
+    
     conf_file = HOME + "/.grc/conf.%s" % ( command )
 
     if os.path.isfile( conf_file ):
@@ -53,22 +45,22 @@ def create():
     # Create the configuration file
     conf_file = open( conf_file, 'a' )
     conf_file.write( "# GRC CONFIGURATION FOR %s\n" % ( command.upper() ) )
-    conf_file.write( "regexp=\n" )
-    conf_file.write( "colours=\n" )
+    conf_file.write( "regexp=%s\n" % ( args.color_regexp or '' )  )
+    conf_file.write( "colours=%s\n" % args.colors or '' )
     conf_file.close()
 
     # Edit the grc.conf file
     grc_conf = HOME + "/.grc/grc.conf"
     grc_conf = open( grc_conf, 'a' )
     grc_conf.write( "\n# %s command\n" % command )
-    grc_conf.write( r"(^|[/\w\.]+/)%s\s?" % command )
+    grc_conf.write( args.command_regexp % command )
     grc_conf.write( "\nconf.%s\n" % command )
     grc_conf.close()
 
     # Edit the grc.zsh file
     grc_zsh = ZSHOME + "/system/grc.zsh"
     grc_zsh = open( grc_zsh, 'r+w' )
-    alias = "    alias %s='colourify %s'\n" % ( command, command )
+    alias = "    alias %s='colorify %s'\n" % ( command, command )
     lines = grc_zsh.readlines()
     # Hacky way to clear the file so we don't get repeats
     grc_zsh.seek(0)
@@ -80,17 +72,9 @@ def create():
     sys.stdout.write( "Successfully created templates for %s!\n" % command )
     sys.exit()
 
-def delete():
+def delete( args ):
 
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
-    except:
-        help()
-
-    if not args:
-        help()
-
-    command = args[1].lower()
+    command = args.command.lower()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
@@ -121,7 +105,7 @@ def delete():
     # Remove it from the grc.zsh file
     grc_zsh = ZSHOME + "/system/grc.zsh"
     grc_zsh = open( grc_zsh, 'r+w' )
-    removable = "    alias %s='colourify %s'\n" % ( command, command )
+    removable = "    alias %s='colorify %s'\n" % ( command, command )
     lines = grc_zsh.readlines()
     grc_zsh.seek(0)
     grc_zsh.truncate()
@@ -132,53 +116,33 @@ def delete():
     sys.stdout.write( "Successfully deleted %s!\n" % command )
     sys.exit()
 
-def run():
+def colorify( args ):
 
     global pidp
 
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
-    except:
-        help()
-
-    if not args:
-        help()
-
-    stdoutf = 0
-    stderrf = 0
+    stdoutf = args.stdout
+    stderrf = args.stderr
 
     # configure file for grcat
-    cfile = ""
+    cfile = args.config
 
-    colour = 1
-
-    for i in optlist:
-        if i[0] in ["--stderr", "-e"]:
-            stderrf = 1
-        elif i[0] in ["--stdout", "-s"]:
-            stdoutf = 1
-        elif i[0] in ["--config", "-c"]:
-            cfile = i[1]
-        elif i[0] == "--colour":
-            if i[1] == "on":
-                colour = 1
-            elif i[1] == "off":
-                colour = 0
-            elif i[1] == "auto":
-                colour = sys.stdout.isatty()
-            else:
-                help()
+    if args.color == "on":
+        color = True
+    elif args.color == "off":
+        color = False
+    else:
+        color = sys.stdout.isatty()
 
     stdoutff = 1
     stderrff = 0
-    if stderrf == 1:
+    if stderrf:
         stdoutff = 0
         stderrff = 1
-    if stdoutf == 1:
+    if stdoutf:
         stdoutff = 1
 
     conffile = None
-    if cfile == "":
+    if not cfile:
         home = []
         if os.environ.has_key('HOME'):
             home = [os.environ['HOME']+"/.grc/grc.conf"]
@@ -198,13 +162,13 @@ def run():
                 if l[0] == "#" or l[0] == '\012':
                     continue
                 regexp = l[:-1]
-                if re.search(regexp, string.join(args)):
+                if re.search(regexp, string.join(args.commands)):
                     cfile = f.readline()[:-1]
                     break
 
     signal.signal(signal.SIGINT, keybint)
 
-    if cfile != "" and colour:
+    if cfile and color:
         if stdoutff:
             choo, chio = os.pipe()
         if stderrff:
@@ -221,7 +185,7 @@ def run():
                 os.dup2(chie, 2)
                 os.close(choe)
                 os.close(chie)
-            os.execvp(args[0], args)
+            os.execvp(args.commands[0], args.commands)
 
 
         if stdoutff:
@@ -265,7 +229,7 @@ def run():
     else:
         pidp = os.fork() 
         if pidp == 0:
-            os.execvp(args[0], args)
+            os.execvp(args.name, args.commands)
         try:
             status = os.wait()[1]
         except OSError: # interrupted system call
@@ -274,10 +238,85 @@ def run():
 
     sys.exit(status and os.WEXITSTATUS(status))
 
-command = sys.argv[1].lower()
-if command == "create":
-    create()
-elif command == "delete":
-    delete()
-else:
-    run()
+parser = argparse.ArgumentParser( description="Colorize your terminal (and your life)" )
+subparsers = parser.add_subparsers( dest="name", help='COMMAND-SPECIFIC HELP' )
+
+# Parser for `create`
+create_parser = subparsers.add_parser( 'create', help="Add a new terminal command to GRC" )
+create_parser.add_argument(
+    'command',
+    metavar='COMMAND',
+    help="Command you want to create"
+    )
+create_parser.add_argument(
+    '--color-regexp',
+    '-l',
+    type=str,
+    default=None,
+    help="Regular expression for color-matching"
+    )
+create_parser.add_argument(
+    '--command-regexp',
+    '-m',
+    type=str,
+    default=r"(^|[/\w\.]+/)%s\s?",
+    help="Regular expression for command-matching"
+    )
+create_parser.add_argument(
+    '-c',
+    '--colors',
+    type=str,
+    default=None,
+    help="Colors for the command-colorizing"
+    )
+create_parser.set_defaults( func=create )
+
+# Parser for `delete`
+delete_parser = subparsers.add_parser( 'delete', help="Remove a terminal command from GRC" )
+delete_parser.set_defaults( func=delete )
+delete_parser.add_argument(
+    'command',
+    metavar="COMMAND",
+    help="Command you want to delete"
+    )
+
+# Default parser
+run_parser = subparsers.add_parser( 'colorify', help="Run a configured command through GRC" )
+run_parser.add_argument(
+    'commands',
+    metavar="COMMANDS",
+    nargs="+",
+    help="Terminal commands to run"
+    )
+run_parser.add_argument(
+    '-e',
+    '--stderr',
+    action="store_true",
+    help="Redirect STDERR.  If this option is selected, do not automatically redirect STDOUT"
+    )
+run_parser.add_argument(
+    '-s',
+    '--stdout',
+    action="store_true",
+    help="Redirect STDOUT, even if -e is selected"
+    )
+run_parser.add_argument(
+    '-c',
+    '--config',
+    default=None,
+    type=str,
+    metavar="CFILE",
+    help="Use CFILE as configuration file for grcat"
+    )
+run_parser.add_argument(
+    '--color',
+    default="auto",
+    type=str,
+    choices = ["on", "off", "auto"],
+    help="Choose how to colorize the output"
+    )
+run_parser.set_defaults( func=colorify )
+
+args, unknown = parser.parse_known_args()
+if 'commands' in vars(args): args.commands.extend( unknown )
+args.func( args )
