@@ -21,6 +21,19 @@ def help():
     print
     sys.exit()
 
+def delete_help():
+    print "Generic Colouriser 1.4"
+    print "======================"
+    print
+    print "GRC DELETE"
+    print
+    print "USAGE: grc delete [-h] command"
+    print
+    print "OPTIONS:"
+    print "-h --help    Print this help message and exit"
+    print
+    sys.exit()
+
 
 def keybint(signum, frame):
     global pidp
@@ -99,10 +112,10 @@ def delete():
     try:
         optlist, args = getopt.getopt( sys.argv[2:], "h", [ "help" ] )
     except:
-        help()
+        delete_help()
 
     if not args:
-        help()
+        delete_help()
 
     command = args[0].strip().lower()
 
