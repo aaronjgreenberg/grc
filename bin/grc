@@ -9,15 +9,16 @@ def version():
 
 def help():
     print "Generic Colouriser 1.4"
+    print "======================"
     print
-    print "grc [options] command [args]"
+    print "USAGE: grc [-e] [-s] [-c CONFIG] [--colour=FLAG] command [args]"
     print
-    print "Options:"
-    print "-e --stderr    redirect stderr. If this option is selected, "
-    print "               do not automatically redirect stdout"
-    print "-s --stdout    redirect stdout, even if -e is selected"
-    print "-c name --config=name    use name as configuration file for grcat"
-    print "--colour=word  word is one of: on, off, auto"
+    print "OPTIONS:"
+    print "-e --stderr                  redirect stderr. If this option is selected, "
+    print "                             do not automatically redirect stdout"
+    print "-s --stdout                  redirect stdout, even if -e is selected"
+    print "-c CONFIG --config=CONFIG    use CONFIG as configuration file for grcat"
+    print "--colour=FLAG                FLAG is one of: on, off, auto"
     print
     sys.exit()
 
