@@ -36,10 +36,24 @@ def create():
     except:
         help()
 
-    if not args or "--help" in optlist[0] or "-h" in optlist[0]:
+    if not args:
         help()
 
     command = args[0].strip().lower()
+
+    color_regexp = ""
+    colors = ""
+    command_regexp = r"(^|[/\w\.]+/)%s\s?" % command
+
+    for i in optlist:
+        if i[ 0 ] in ( "-l", "--color-regexp" ):
+            color_regexp = i[ 1 ]
+        elif i[ 0 ] in ( "-m", "--command-regexp" ):
+            command_regexp = i[ 1 ]
+        elif i[ 0 ] in ( "-c", "--colors" ):
+            colors = i[ 1 ]
+        else:
+            help()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
@@ -53,15 +67,15 @@ def create():
     # Create the configuration file
     conf_file = open( conf_file, 'a' )
     conf_file.write( "# GRC CONFIGURATION FOR %s\n" % ( command.upper() ) )
-    conf_file.write( "regexp=\n" )
-    conf_file.write( "colours=\n" )
+    conf_file.write( "regexp=%s\n" % color_regexp )
+    conf_file.write( "colours=%s\n" % colors )
     conf_file.close()
 
     # Edit the grc.conf file
     grc_conf = HOME + "/.grc/grc.conf"
     grc_conf = open( grc_conf, 'a' )
     grc_conf.write( "\n# %s command\n" % command )
-    grc_conf.write( r"(^|[/\w\.]+/)%s\s?" % command )
+    grc_conf.write( command_regexp )
     grc_conf.write( "\nconf.%s\n" % command )
     grc_conf.close()
 
@@ -87,7 +101,7 @@ def delete():
     except:
         help()
 
-    if not args or "--help" in optlist[0] or "-h" in optlist[0]:
+    if not args:
         help()
 
     command = args[0].strip().lower()
