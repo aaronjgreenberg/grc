@@ -300,6 +300,9 @@ def run():
 
     sys.exit(status and os.WEXITSTATUS(status))
 
+if not len( sys.argv ) > 1:
+    help()
+
 command = sys.argv[1].strip().lower()
 if command == "create":
     create()
