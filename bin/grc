@@ -32,14 +32,14 @@ def keybint(signum, frame):
 def create():
 
     try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
+        optlist, args = getopt.getopt(sys.argv[2:], "hl:m:c:", [ "help", "color-regexp=", "command-regexp=", "colors=" ] )
     except:
         help()
 
-    if not args:
+    if not args or "--help" in optlist[0] or "-h" in optlist[0]:
         help()
 
-    command = args[1].lower()
+    command = args[0].strip().lower()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
@@ -83,14 +83,14 @@ def create():
 def delete():
 
     try:
-        optlist, args = getopt.getopt(sys.argv[1:], "sec:", ["stdout", "stderr", "config=", "colour="] )
+        optlist, args = getopt.getopt( sys.argv[2:], "h", [ "help" ] )
     except:
         help()
 
-    if not args:
+    if not args or "--help" in optlist[0] or "-h" in optlist[0]:
         help()
 
-    command = args[1].lower()
+    command = args[0].strip().lower()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
@@ -143,12 +143,6 @@ def run():
 
     if not args:
         help()
-
-    command = args[0].lower()
-    if command == "create":
-        create( args[1] )
-    elif command == "delete":
-        delete( args[1] )
 
     stdoutf = 0
     stderrf = 0
@@ -280,7 +274,7 @@ def run():
 
     sys.exit(status and os.WEXITSTATUS(status))
 
-command = sys.argv[1].lower()
+command = sys.argv[1].strip().lower()
 if command == "create":
     create()
 elif command == "delete":
