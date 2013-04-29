@@ -33,6 +33,23 @@ def delete_help():
     print
     sys.exit()
 
+def create_help():
+    print "Generic Colouriser 1.4"
+    print "======================"
+    print
+    print "USAGE: grc create [-h] [-l REGEXP] [-m REGEX] [-c COLORS] command"
+    print
+    print "OPTIONS:"
+    print "-h --help            Print this help message and exit"
+    print "-l --color-regexp    Set the regular expression"
+    print "                     used to color a command's output"
+    print "-m --commond-regexp  Set the regular expression"
+    print "                     used to match a GRC-configured command"
+    print "-c --colors          Set the colors used to paint up your"
+    print "                     terminal"
+    print
+    sys.exit()
+
 
 def keybint(signum, frame):
     global pidp
@@ -46,10 +63,10 @@ def create():
     try:
         optlist, args = getopt.getopt(sys.argv[2:], "hl:m:c:", [ "help", "color-regexp=", "command-regexp=", "colors=" ] )
     except:
-        help()
+        create_help()
 
     if not args:
-        help()
+        create_help()
 
     command = args[0].strip().lower()
 
@@ -65,7 +82,7 @@ def create():
         elif i[ 0 ] in ( "-c", "--colors" ):
             colors = i[ 1 ]
         else:
-            help()
+            create_help()
 
     HOME = os.environ['HOME']
     ZSHOME = os.environ['ZSHOME']
